@@ -10,6 +10,7 @@ Connect to an individual remote pool.
 For example, in a multi-process environment.
 
 .. note:: Use `Template.something` as for the ``Controller.s`` or a ``Type(Template)``?
+          We should also be able to get away with ``>> Pool``, ``Controller >>`` and ``for pool in pools:``.
 
 .. code:: python
 
@@ -33,9 +34,9 @@ Connection Types
 
 Possible variants for connections:
 
-Protocol: JSON, binary (BSON)
-Transport: TCP, IPC/Pipe, SSH?
-Security: SSL/TCP, HMAC/*, SSH/SSH
+* Protocol: JSON, binary (BSON)
+* Transport: TCP, IPC/Pipe, SSH?
+* Security: SSL/TCP, HMAC/*, SSH/SSH
 
 We basically always need Protocol + Connection, but may want one/multiple Security inserts.
 The current Transport architecture and usage allows adding arbitrary binary wrappers.
