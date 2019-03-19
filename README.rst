@@ -47,7 +47,7 @@ So we could have Sec as something like ``JSON(HMAC(SSL(TCP(...))))``:
     from cobald.remote import JSON, SSL, TCP
 
     # operator based binding/pipes
-    controller >> JSON | SSL | TCP('cobald_host', 12781)
+    controller >> JSON + SSL + TCP('cobald_host', 12781)
 
     # parameter based factory
     controller >> TCP('cobald_host', 12781, protocol=JSON, auth=SSL)
