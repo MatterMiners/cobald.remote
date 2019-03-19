@@ -7,7 +7,7 @@ import json
 from cobald.interfaces import Pool
 from cobald.daemon import service
 
-from .abc import Transport, SlaveHandler, MasterHandler, PoolsHandler, RemotePool, Connector
+from cobald.remote._abc import Transport, SlaveHandler, MasterHandler, PoolsHandler, RemotePool, Connector
 
 
 async def send(transport: Transport, **message):

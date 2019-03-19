@@ -39,14 +39,7 @@ class Transport(ABC):
     Transports are bi-directional streams of binary messages.
     Messages are received in-order of sending.
     """
-    __slots__ = ('_max_identifier',)
-
-    def __init__(self):
-        self._max_identifier = 0
-
-    def mint_identifier(self) -> int:
-        identifier = self._max_identifier = self._max_identifier + 1
-        return identifier
+    __slots__ = ()
 
     @abstractmethod
     async def put(self, *messages: bytes):
@@ -125,7 +118,7 @@ class MasterHandler(ABC):
         self._logger = logging.getLogger('cobald.runtime.%s' % channel_name)
 
     @abstractmethod
-    def adopt(self) -> SyncAsyncIterable[Pool]:
+    def adopt(self) -> SyncAsyncIterable[RemotePool]:
         """Adopt every :py:class:`~.Pool` that is published from the remote side"""
         ...
 

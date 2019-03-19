@@ -2,8 +2,8 @@ import trio
 from typing import AsyncIterator, Optional, Dict, Tuple, Any
 
 
-from .abc import Transport, Connector
-from .utility import async_iter
+from cobald.remote._abc import Transport, Connector
+from cobald.remote.utility import async_iter
 
 
 def int2bytes(num: int) -> bytes:
@@ -25,6 +25,8 @@ class TcpConnector(Connector):
         return instance
 
     def __init__(self, host, port: int):
+        if hasattr(self, 'host'):
+            return
         self.host = host
         self.port = port
         self._listening = False
