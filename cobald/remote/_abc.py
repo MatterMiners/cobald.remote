@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from cobald.interfaces import Pool, Controller
 
-from .utility import maybe
+from .utility import default
 
 
 PoolStat = NamedTuple('PoolStat', [
@@ -82,10 +82,10 @@ class RemotePool(Pool):
         return self._allocation
 
     def update(self, demand=None, supply=None, utilisation=None, allocation=None):
-        self._demand = maybe(demand, self._demand)
-        self._supply = maybe(supply, self._supply)
-        self._utilisation = maybe(utilisation, self._utilisation)
-        self._allocation = maybe(allocation, self._allocation)
+        self._demand = default(demand, self._demand)
+        self._supply = default(supply, self._supply)
+        self._utilisation = default(utilisation, self._utilisation)
+        self._allocation = default(allocation, self._allocation)
 
 
 class RemoteController(Controller):

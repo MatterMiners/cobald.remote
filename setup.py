@@ -25,6 +25,7 @@ if __name__ == '__main__':
         # dependencies
         install_requires=[
             'trio>=0.11.0',
+            'async_generator',
         ],
         extras_require={
             'docs':  ["sphinx", "sphinxcontrib-tikz", "sphinx_rtd_theme"],
@@ -42,8 +43,8 @@ if __name__ == '__main__':
             'Topic :: Office/Business :: Scheduling',
             'Topic :: System :: Distributed Computing',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
+            'Programming Language :: Python :: 3.7',
         ],
         keywords=package_about['__keywords__'],
         # unit tests

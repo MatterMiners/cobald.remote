@@ -1,50 +1,120 @@
-from typing import AsyncIterator, Awaitable, TypeVar, Optional
+from typing import AsyncIterator, Awaitable, TypeVar, Optional, Callable, Iterable, Union, AsyncContextManager
+from trio.abc import SendChannel
+import functools
+
+import trio
+from async_generator import aclosing, asynccontextmanager
+
 
 T = TypeVar('T')
 
 
-def async_iter(awaitable: Awaitable[T], sentinel: Optional[T] = None) -> AsyncIterator[T]:
-    if sentinel is None:
-        return AsyncIter(awaitable)
+def acloseable(call: Callable[..., T]) -> Callable[..., AsyncContextManager[T]]:
+    @functools.wraps(call)
+    def inner(*args, **kwargs) -> AsyncContextManager[T]:
+        return aclosing(call(*args, **kwargs))  # type: AsyncContextManager[T]
+    return inner
+
+
+class AwaitableBool:
+    def __init__(self, event: trio.Event):
+        self._event = event
+
+    def __bool__(self):
+        return self._event.is_set()
+
+    def __await__(self):
+        yield from self._event.wait().__await__()
+
+
+def default(value: Optional[T], _or: T) -> T:
+    return value if value is not None else _or
+
+
+class AsyncIterSentinel:
+    def __repr__(self):
+        return self.__class__.__name__
+
+
+def async_iter(
+        *awaitable_calls: Callable[[], Awaitable[T]],
+        sentinel: Union[T, AsyncIterSentinel] = AsyncIterSentinel(),
+) -> AsyncIterator[T]:
+    """
+    Provide an AsyncIterator that repeatedly calls and awaits ``awaitable_calls``
+
+    :param awaitable_calls: producer of values that the AsyncIterator provides
+    :param sentinel: optional indicator for end of iteration
+    :return: AsyncIterator over all values produced by ``awaitable_calls``
+
+    In its simples form with just one ``awaitable_calls``, this is equivalent
+    to repeatedly calling, awaiting and yielding from its argument:
+
+    .. code:: python3
+
+        async def async_iter(awaitable_call):
+            while True:
+                yield await awaitable_call()
+
+    With multiple ``awaitable_calls``, their results are merged in-order
+    of availability. If ``sentinel`` is provided, any ``awaitable_calls``
+    whose result equals ``sentinel`` is considered exhausted; once all
+    ``awaitable_calls`` are exhausted, the ``async_iter`` is exhausted
+    as well.
+    """
+    if len(awaitable_calls) == 1:
+        return awaitable_call_iterator(awaitable_calls[0], sentinel)
+    elif len(awaitable_calls) == 0:
+        raise TypeError('async_iter expected at least 1 arguments, got 0')
     else:
-        return AsyncSentinelIter(awaitable, sentinel)
+        return multi_awaitable_call_iterator(
+            awaitable_calls,
+            sentinel
+        )
 
 
-def maybe(value: Optional[T], default: T) -> T:
-    return value if value is not None else default
+async def awaitable_call_iterator(
+        awaitable_call: Callable[[], Awaitable[T]],
+        sentinel: Union[T, AsyncIterSentinel],
+):
+    if isinstance(sentinel, AsyncIterSentinel):
+        while True:
+            yield await awaitable_call()
+    else:
+        value = await awaitable_call()
+        while value != sentinel:
+            yield value
+            value = await awaitable_call()
 
 
-class AsyncIter:
-    """
-    AsyncIterator repeatedly invoking ``awaitable``
-    """
-    __slots__ = ('_awaitable',)
+async def multi_awaitable_call_iterator(
+        awaitable_calls: Iterable[Callable[[], Awaitable[T]]],
+        sentinel: Union[T, AsyncIterSentinel],
+):
+    async with trio.open_nursery() as nursery:
+        send_channel, receive_channel = trio.open_memory_channel(0)
+        async with send_channel, receive_channel:
+            for awaitable_call in awaitable_calls:
+                nursery.start_soon(_multi_aci_task(
+                    awaitable_call=awaitable_call,
+                    channel=send_channel.clone(),
+                    sentinel=sentinel,
+                ))
+            async for value in receive_channel:
+                yield value
 
-    def __init__(self, awaitable: Awaitable):
-        self._awaitable = awaitable
 
-    async def __anext__(self):
-        return await self._awaitable
-
-    def __aiter__(self):
-        return self
-
-
-class AsyncSentinelIter:
-    """
-    AsyncIterator repeatedly invoking ``awaitable`` until ``sentinel`` is observed
-    """
-    __slots__ = ('_awaitable', '_sentinel')
-
-    def __init__(self, awaitable: Awaitable, sentinel):
-        self._awaitable = awaitable
-        self._sentinel = sentinel
-
-    async def __anext__(self):
-        value = await self._awaitable
-        if value == self._sentinel:
-            raise StopAsyncIteration
-        return value
-
-    def __aiter__(self):
-        return self
+async def _multi_aci_task(
+        awaitable_call: Callable[[], Awaitable[T]],
+        channel: SendChannel,
+        sentinel: Union[T, AsyncIterSentinel],
+):
+    if isinstance(sentinel, AsyncIterSentinel):
+        while True:
+            await channel.send(await awaitable_call())
+    else:
+        value = await awaitable_call()
+        while value != sentinel:
+            await channel.send(value)
+            value = await awaitable_call()
+    await channel.aclose()

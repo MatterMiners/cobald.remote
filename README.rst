@@ -6,27 +6,28 @@ This is a *draft* for integrating remote processes as COBalD Pools.
 Pool Connections
 ----------------
 
-Connect to an individual remote pool.
-For example, in a multi-process environment.
+Connect to an individual remote controller, or one or several remote pools.
+For example, locally in a multi-process environment or distributed in a cluster.
 
-.. note:: Use `Template.something` as for the ``Controller.s`` or a ``Type(Template)``?
-          We should also be able to get away with ``>> Pool``, ``Controller >>`` and ``for pool in pools:``.
+The idea is to have "template" objects that specify the connection,
+e.g. ``TCP(host='127.0.0.1', port=1337)``.
+These generic objects allow to *create specific connections* for either
+one controller, one pool or many pools.
 
-.. code:: python
+This could use `Template.type` as for the ``Controller.s`` or a ``Type(Template)``.
+We could also use just ``>> Pool``, ``Controller >>`` and ``for pool in pools:``.
 
-    controller >> TCP('cobald_host', 12781).pool
-    controller >> Pool(TCP('cobald_host', 12781))
+.. code:: python3
 
-    TCP('cobald_host', 12781).controller >> pool
-    Controller(TCP('cobald_host', 12781)) >> pool
+    # constructor
+    Controller(TCP('cobald_host', 12781).pool)
+    TCP('cobald_host', 12781).controller(pool)
 
-Accept any remote pool connecting.
-For example, connecting with resources from a composite factory.
+    # operator
+    controller >> TCP('cobald_host', 12781)
+    TCP('cobald_host', 12781) >> pool
 
-.. code:: python
-
-    # inside a composite-factory-remote pool
-    for pool in Pools(TCP('cobald_host', 12781)):
+    for pool in TCP('cobald_host', 12781):
         self._children.add(pool)
 
 Connection Types
@@ -39,18 +40,19 @@ Possible variants for connections:
 * Security: SSL/TCP, HMAC/*, SSH/SSH
 
 We basically always need Protocol + Connection, but may want one/multiple Security inserts.
-The current Transport architecture and usage allows adding arbitrary binary wrappers.
-So we could have Sec as something like ``JSON(HMAC(SSL(TCP(...))))``:
+The current Transport architecture and usage allows adding arbitrary wrappers using binary protocols.
+So we could have Security as something like ``JSON(HMAC(SSL(TCP(...))))``:
 
 .. code::
 
     from cobald.remote import JSON, SSL, TCP
 
     # operator based binding/pipes
+    controller >> JSON >> SSL >> TCP('cobald_host', 12781)
     controller >> JSON + SSL + TCP('cobald_host', 12781)
 
     # parameter based factory
     controller >> TCP('cobald_host', 12781, protocol=JSON, auth=SSL)
 
-    # explicit wrappers
+    # explicit type wrappers
     controller >> JSON(SSL(TCP('cobald_host', 12781)))
