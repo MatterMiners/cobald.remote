@@ -46,7 +46,7 @@ class BinaryStream(CobaldStream):
 class Bin(Protocol):
     __slots__ = ('_demand', '_publish')
 
-    def __init__(self, transport: Transport, *, demand=b'q', publish=b'4e'):
+    def __init__(self, transport: Transport, *, demand=b'f', publish=b'ffee'):
         super().__init__(transport=transport)
         self._demand = demand
         self._publish = publish
