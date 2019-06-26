@@ -1,7 +1,7 @@
 import json
 
 from .._interface.api import Protocol, stream_manager
-from .._interface.streams import CobaldStream, MessageStream
+from .._interface.streams import CobaldStream
 from ..utility import acloseable, aclosing
 
 

@@ -15,7 +15,8 @@ class Transport(ABC):
     __slots__ = ()
 
     @abstractmethod
-    async def __connect__(self) -> AsyncContextManager[MessageStream]: ...
+    async def __connect__(self) -> AsyncContextManager[MessageStream]:
+        pass
 
     async def __accept_one__(self) -> 'AsyncContextManager[MessageStream]':
         async with aclosing(self.__accept__()) as connections:
@@ -23,7 +24,8 @@ class Transport(ABC):
                 return connection
 
     @abstractmethod
-    async def __accept__(self) -> AsyncIterator[AsyncContextManager[MessageStream]]: ...
+    async def __accept__(self) -> AsyncIterator[AsyncContextManager[MessageStream]]:
+        pass
 
 
 class Protocol(ABC):
@@ -39,10 +41,10 @@ class Protocol(ABC):
         return RemoteController(target=target, protocol=self, interval=interval)
 
     def __iter__(self) -> Iterator[ConnectedPool]:
-        ...
+        raise NotImplementedError
 
     def __aiter__(self) -> AsyncIterator[ConnectedPool]:
-        ...
+        raise NotImplementedError
 
     def __rshift__(self, other: Pool) -> RemoteController:
         return Partial(RemoteController, protocol=self) >> other
@@ -52,7 +54,8 @@ class Protocol(ABC):
         return other >> self.pool()
 
     @abstractmethod
-    async def __connect__(self) -> AsyncContextManager[CobaldStream]: ...
+    async def __connect__(self) -> AsyncContextManager[CobaldStream]:
+        pass
 
     async def __accept_one__(self) -> 'AsyncContextManager[CobaldStream]':
         async with aclosing(self.__accept__()) as connections:
@@ -60,7 +63,8 @@ class Protocol(ABC):
                 return connection
 
     @abstractmethod
-    def __accept__(self) -> AsyncIterator[AsyncContextManager[CobaldStream]]: ...
+    def __accept__(self) -> AsyncIterator[AsyncContextManager[CobaldStream]]:
+        pass
 
 
 CS = TypeVar('CS', bound=CobaldStream)

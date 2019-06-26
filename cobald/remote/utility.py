@@ -1,9 +1,10 @@
-from typing import AsyncIterator, Awaitable, TypeVar, Optional, Callable, Iterable, Union, AsyncContextManager
+from typing import AsyncIterator, Awaitable, TypeVar, Optional, Callable,\
+    Iterable, Union, AsyncContextManager
 from trio.abc import SendChannel
 import functools
 
 import trio
-from async_generator import aclosing, asynccontextmanager
+from async_generator import aclosing
 
 
 T = TypeVar('T')

@@ -33,7 +33,7 @@ class IntervalWindow:
             max_interval = max(self.intervals)
             avg_interval = sum(self.intervals) / len(self.intervals)
             delay = self._last_update + (
-                    avg_interval + (max_interval - avg_interval) * 1.5
+                avg_interval + (max_interval - avg_interval) * 1.5
             ) - time.time()
             try:
                 await trio.sleep(delay)
@@ -167,9 +167,9 @@ class RemotePool(Pool):
 
     async def run(self):
         async with trio.open_nursery() as nursery,\
-          aclosing(self._protocol.__accept__()) as accept:
+                aclosing(self._protocol.__accept__()) as accept:
             while True:
-                with trio.fail_after(60*5):
+                with trio.fail_after(60 * 5):
                     connection = await accept.__anext__()
                 async with connection as stream:  # type: CobaldStream
                     self._peer = stream.peer
@@ -215,7 +215,7 @@ class RemoteController(Controller):
     async def run(self):
         async with trio.open_nursery() as nursery:
             while True:
-                with trio.fail_after(60*5):
+                with trio.fail_after(60 * 5):
                     connection = await self._protocol.__connect__()
                 async with connection as stream:  # type: CobaldStream
                     self._peer = stream.peer

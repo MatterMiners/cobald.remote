@@ -6,7 +6,7 @@ Remote pools for COBalD - the Opportunistic Balancing Daemon
     :target: http://cobald.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-This is a **draft** for a feedback based balancing system for providing opportunistic resources.
+This is a *draft* for integrating remote processes as COBalD Pools.
 """
 __title__ = 'cobald.remote'
 __summary__ = 'Remote pools for COBalD - the Opportunistic Balancing Daemon'

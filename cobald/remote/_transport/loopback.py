@@ -44,8 +44,8 @@ class MemoryTransport(Transport):
 
 @asynccontextmanager
 async def scope_stream(
-            send: SendChannel[bytes],
-            receive: ReceiveChannel[bytes]
+    send: SendChannel[bytes],
+    receive: ReceiveChannel[bytes]
 ) -> AsyncContextManager[MessageStream]:
     async with send, receive:
         memory_stream = MemoryStream(send, receive)
