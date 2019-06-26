@@ -19,7 +19,7 @@ class IntervalWindow:
 
     def __init__(self, size: int = 10):
         self.intervals = deque((0.1,), maxlen=size)
-        self._last_update = time.time() - 1
+        self._last_update = time.time() - 0.1
 
     def update(self):
         """Add a new measurement point"""
@@ -32,16 +32,13 @@ class IntervalWindow:
             yield
             max_interval = max(self.intervals)
             avg_interval = sum(self.intervals) / len(self.intervals)
-            next_date = self._last_update + (
+            delay = self._last_update + (
                     avg_interval + (max_interval - avg_interval) * 1.5
-            )
-            if next_date >= time.time():
-                await trio.sleep_until(next_date)
-            else:  # estimate too low
-                try:
-                    await trio.sleep(time.time() - next_date)
-                except ValueError:  # missed time.time() by an instant
-                    pass
+            ) - time.time()
+            try:
+                await trio.sleep(delay)
+            except ValueError:  # missed time.time() by an instant
+                await trio.sleep(-delay)
 
 
 @service(flavour=trio)
