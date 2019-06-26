@@ -1,4 +1,4 @@
 coverage:
   ignore:
-    - cobald_tests
-    - cobald/__about__.py
+    - cobald_remote_tests
+    - cobald/remote/__about__.py
