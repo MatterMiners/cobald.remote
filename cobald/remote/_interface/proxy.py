@@ -46,6 +46,7 @@ class ConnectedPool(Pool):
     __slots__ = (
         '_stream', '_delays', '_closed', '_peer',
         '_supply', '_demand', '_allocation', '_utilisation',
+        '_demand_request',
     )
 
     @property
@@ -63,7 +64,7 @@ class ConnectedPool(Pool):
 
     @demand.setter
     def demand(self, value):
-        self._demand = value
+        self._demand_request = value
         self._delays.update()
 
     @property
@@ -95,6 +96,7 @@ class ConnectedPool(Pool):
     def __init__(self, stream: AsyncContextManager[CobaldStream]):
         self._delays = IntervalWindow(size=10)
         self._demand, self._supply, self._utilisation, self._allocation = 0, 0, 1, 1
+        self._demand_request = self._demand
         self._stream = stream
         self._closed = trio.Event()
         self._peer = None  # type: Optional[str]
@@ -111,7 +113,7 @@ class ConnectedPool(Pool):
 
     async def _publish_demand(self, stream: CobaldStream):
         async for _ in self._delays:
-            await stream.demand(self._demand)
+            await stream.demand(self._demand_request)
 
     async def _receive_state(self, stream: CobaldStream):
         async with stream.subscribe() as subscription:
@@ -127,6 +129,7 @@ class RemotePool(Pool):
     __slots__ = (
         '_protocol', '_delays', '_peer',
         '_supply', '_demand', '_allocation', '_utilisation'
+        '_demand_request',
     )
 
     @property
@@ -144,7 +147,7 @@ class RemotePool(Pool):
 
     @demand.setter
     def demand(self, value):
-        self._demand = value
+        self._demand_request = value
         self._delays.update()
 
     @property
@@ -158,6 +161,7 @@ class RemotePool(Pool):
     def __init__(self, protocol: 'Protocol'):
         self._delays = IntervalWindow(size=10)
         self._demand, self._supply, self._utilisation, self._allocation = 0, 0, 1, 1
+        self._demand_request = self._demand
         self._protocol = protocol
         self._peer = None  # type: Optional[str]
 
@@ -180,7 +184,7 @@ class RemotePool(Pool):
     async def _publish_demand(self, stream: CobaldStream):
         try:
             async for _ in self._delays:
-                await stream.demand(self._demand)
+                await stream.demand(self._demand_request)
         except StreamExpired:
             pass
 
