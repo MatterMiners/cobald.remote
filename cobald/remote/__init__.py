@@ -1,1 +1,1 @@
-from . import _compat
+from . import _compat  # noqa: F401
