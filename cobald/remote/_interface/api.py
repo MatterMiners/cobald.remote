@@ -62,7 +62,7 @@ class Protocol(ABC):
                 return connection
 
     @abstractmethod
-    def __accept__(self) -> AsyncIterator[AsyncContextManager[CobaldStream]]:
+    async def __accept__(self) -> AsyncIterator[AsyncContextManager[CobaldStream]]:
         raise NotImplemented
 
 
