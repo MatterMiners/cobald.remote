@@ -11,9 +11,16 @@ from .mock import MockPool, MockController, accept_services
 from .utility import poll
 
 
+connections = 0
+
+
 @pytest.fixture(params=(JSON, Bin))
 def protocol(request):
-    return request.param(MemoryTransport('test_json'))
+    global connections
+    connections += 1
+    return request.param(MemoryTransport(
+        f'protocol[{request.param.__name__},{connections}]'
+    ))
 
 
 def test_binding(protocol: Protocol):
