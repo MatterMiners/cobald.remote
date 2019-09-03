@@ -5,10 +5,11 @@ from .._interface.streams import CobaldStream, MessageStream
 from ..utility import acloseable, aclosing
 
 
-def _enforce_order(fmt: bytes) -> bytes:
-    if fmt[0] == b'>':
+def enforce_order(fmt: bytes) -> bytes:
+    """Enforce consistent ordering in a ``struct`` format"""
+    if fmt[:1] == b'>':
         return fmt
-    elif fmt[0] not in b'@=<!':
+    elif fmt[:1] not in b'@=<!':
         return b'>' + fmt
     else:
         return b'>' + fmt[1:]
@@ -19,8 +20,8 @@ class BinaryStream(CobaldStream):
 
     def __init__(self, stream: MessageStream, demand: bytes, publish: bytes):
         super().__init__(stream=stream)
-        self._demand = struct.Struct(_enforce_order(demand))
-        self._publish = struct.Struct(_enforce_order(publish))
+        self._demand = struct.Struct(enforce_order(demand))
+        self._publish = struct.Struct(enforce_order(publish))
 
     async def demand(self, amount):
         await self.stream.send(self._demand.pack(amount))
