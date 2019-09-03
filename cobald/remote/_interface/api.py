@@ -6,6 +6,7 @@ from cobald.interfaces import Pool, Controller, Partial
 
 from .streams import MessageStream, CobaldStream
 from .proxy import RemoteController, RemotePool, ConnectedPool
+from ..utility import sync_aiter
 
 
 class Transport(ABC):
@@ -41,10 +42,13 @@ class Protocol(ABC):
         return RemoteController(target=target, protocol=self, interval=interval)
 
     def __iter__(self) -> Iterator[ConnectedPool]:
-        raise NotImplementedError
+        for pool in sync_aiter(self.__aiter__()):
+            yield pool
 
-    def __aiter__(self) -> AsyncIterator[ConnectedPool]:
-        raise NotImplementedError
+    async def __aiter__(self) -> AsyncIterator[ConnectedPool]:
+        async with aclosing(self.__accept__()) as connections:
+            async for connection in connections:
+                yield ConnectedPool(connection)
 
     def __rshift__(self, other: Pool) -> RemoteController:
         return Partial(RemoteController, protocol=self, __leaf__=False) >> other
