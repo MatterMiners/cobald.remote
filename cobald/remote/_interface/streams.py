@@ -71,24 +71,24 @@ class CobaldStream(ABC):
 
     @abstractmethod
     async def demand(self, amount: float):
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def receive(self) -> AsyncContextManager[AsyncIterator[float]]:
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def publish(
         self,
         supply: float, demand: float, utilisation: float, allocation: float
     ):
-        raise NotImplemented
+        raise NotImplementedError
 
     @abstractmethod
     def subscribe(
             self,
     ) -> AsyncContextManager[AsyncIterator[Tuple[float, float, float, float]]]:
-        raise NotImplemented
+        raise NotImplementedError
 
     async def aclose(self):
         """Gracefully close the stream and notify its peer"""
