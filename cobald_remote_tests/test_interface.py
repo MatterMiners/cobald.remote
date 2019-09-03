@@ -25,9 +25,14 @@ def test_binding(protocol: Protocol):
         control_side.demand = 2
         assert poll(lambda: pool_side.target.demand == 2, timeout=2),\
             "Remote pool demand must be set"
+        assert poll(lambda: control_side.demand == 2)
         control_side.demand = 400000
         assert poll(lambda: pool_side.target.demand == 400000, timeout=2),\
             "Remote pool demand must be set"
+        assert poll(lambda: control_side.demand == 400000)
         control_side.demand = 0
         assert poll(lambda: pool_side.target.demand == 0, timeout=2),\
             "Remote pool demand must be set"
+        assert poll(lambda: control_side.demand == 0)
+        assert control_side.allocation == pool_side.target.allocation
+        assert control_side.utilisation == pool_side.target.utilisation
