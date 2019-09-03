@@ -1,9 +1,11 @@
 from typing import AsyncIterator, Awaitable, TypeVar, Optional, Callable,\
-    Iterable, Union, AsyncContextManager
+    Iterable, Union, AsyncContextManager, AsyncIterable
 from trio.abc import SendChannel
 import functools
 
 import trio
+import queue
+import cobald.daemon
 from async_generator import aclosing
 
 
@@ -130,3 +132,36 @@ async def _multi_aci_task(
             await channel.send(value)
             value = await awaitable_call()
     await channel.aclose()
+
+
+def sync_aiter(async_iterable: AsyncIterable[T], flavour=trio) -> Iterable[T]:
+    """
+    Synchronously iterate on a ``flavour`` async iterable
+
+    :param async_iterable: async iterable from which to fetch items
+    :return: sync iterable containing items from ``async_iterable``
+
+    .. note::
+
+        An active :py:data:`cobald.daemon.runtime` is required.
+    """
+    item_queue = queue.Queue()
+    sentinel = AsyncIterSentinel()
+    cobald.daemon.runtime.adopt(
+        _sa_consumer_task, async_iterable, item_queue, sentinel, flavour=flavour
+    )
+    assert cobald.daemon.runtime.running.is_set()
+    item = item_queue.get()
+    while item is not sentinel:
+        yield item
+        item = item_queue.get()
+
+
+async def _sa_consumer_task(
+    async_iterable: AsyncIterable[T],
+    item_queue: queue.Queue,
+    sentinel: AsyncIterSentinel,
+):
+    async for item in async_iterable:
+        item_queue.put(item)
+    item_queue.put(sentinel)
