@@ -1,6 +1,7 @@
 import contextlib
 import threading
 
+import cobald.daemon
 from cobald.daemon.runners.service import ServiceRunner
 from cobald.interfaces import Pool, Controller
 
@@ -40,6 +41,7 @@ class MockPool(Pool):
 
 @contextlib.contextmanager
 def accept_services(payload: ServiceRunner = None, name=None):
+    """Accept ``cobald`` services and temporarily replace ``cobald.daemon.runtime``"""
     payload = payload if payload is not None else ServiceRunner(accept_delay=0.1)
     thread = threading.Thread(
         target=payload.accept, name=name or str(payload), daemon=True
@@ -47,8 +49,11 @@ def accept_services(payload: ServiceRunner = None, name=None):
     thread.start()
     if not payload.running.wait(1):
         raise RuntimeError('%s failed to start' % payload)
+    prev_runner = cobald.daemon.runtime
+    cobald.daemon.runtime = payload
     try:
         yield
     finally:
+        cobald.daemon.runtime = prev_runner
         payload.shutdown()
         thread.join()
