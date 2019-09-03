@@ -16,7 +16,7 @@ class Transport(ABC):
 
     @abstractmethod
     async def __connect__(self) -> AsyncContextManager[MessageStream]:
-        pass
+        raise NotImplemented
 
     async def __accept_one__(self) -> 'AsyncContextManager[MessageStream]':
         async with aclosing(self.__accept__()) as connections:
@@ -25,7 +25,7 @@ class Transport(ABC):
 
     @abstractmethod
     async def __accept__(self) -> AsyncIterator[AsyncContextManager[MessageStream]]:
-        pass
+        raise NotImplemented
 
 
 class Protocol(ABC):
@@ -54,7 +54,7 @@ class Protocol(ABC):
 
     @abstractmethod
     async def __connect__(self) -> AsyncContextManager[CobaldStream]:
-        pass
+        raise NotImplemented
 
     async def __accept_one__(self) -> 'AsyncContextManager[CobaldStream]':
         async with aclosing(self.__accept__()) as connections:
@@ -63,7 +63,7 @@ class Protocol(ABC):
 
     @abstractmethod
     def __accept__(self) -> AsyncIterator[AsyncContextManager[CobaldStream]]:
-        pass
+        raise NotImplemented
 
 
 CS = TypeVar('CS', bound=CobaldStream)
