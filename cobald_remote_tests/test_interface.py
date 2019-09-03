@@ -1,3 +1,5 @@
+import pytest
+
 from cobald.interfaces import Controller
 
 from cobald.remote._interface.api import Protocol
@@ -9,28 +11,23 @@ from .mock import MockPool, MockController, accept_services
 from .utility import poll
 
 
-class TestPipeline:
-    def test_json(self):
-        remote = JSON(MemoryTransport('test_json'))
-        self._test_binding(remote)
+@pytest.fixture(params=(JSON, Bin))
+def protocol(request):
+    return request.param(MemoryTransport('test_json'))
 
-    def test_binary(self):
-        remote = Bin(MemoryTransport('test_binary'))
-        self._test_binding(remote)
 
-    @staticmethod
-    def _test_binding(remote: Protocol):
-        control_side = MockController.s() >> remote.pool()  # type: MockController
-        pool_side = remote >> MockPool()
-        assert isinstance(control_side, MockController)
-        assert isinstance(pool_side, Controller)
-        with accept_services(name='test_binding'):
-            control_side.set_demand(2)
-            assert poll(lambda: pool_side.target.demand == 2, timeout=2),\
-                "Remote pool demand must be set"
-            control_side.set_demand(400000)
-            assert poll(lambda: pool_side.target.demand == 400000, timeout=2),\
-                "Remote pool demand must be set"
-            control_side.set_demand(0)
-            assert poll(lambda: pool_side.target.demand == 0, timeout=2),\
-                "Remote pool demand must be set"
+def test_binding(protocol: Protocol):
+    control_side = MockController.s() >> protocol.pool()  # type: MockController
+    pool_side = protocol >> MockPool()
+    assert isinstance(control_side, MockController)
+    assert isinstance(pool_side, Controller)
+    with accept_services(name='test_binding'):
+        control_side.set_demand(2)
+        assert poll(lambda: pool_side.target.demand == 2, timeout=2),\
+            "Remote pool demand must be set"
+        control_side.set_demand(400000)
+        assert poll(lambda: pool_side.target.demand == 400000, timeout=2),\
+            "Remote pool demand must be set"
+        control_side.set_demand(0)
+        assert poll(lambda: pool_side.target.demand == 0, timeout=2),\
+            "Remote pool demand must be set"
