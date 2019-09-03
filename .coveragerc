@@ -1,8 +1,10 @@
 [run]
-source = cobald
+source = cobald/remote
 branch = TRUE
 cover_pylib = FALSE
 parallel = False
+omit =
+    cobald/remote/_compat.py
 
 [report]
 exclude_lines =
