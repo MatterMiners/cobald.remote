@@ -106,7 +106,7 @@ class ConnectedPool(Pool):
             with self._stream as stream:  # type: CobaldStream
                 self._peer = stream.peer
                 with trio.open_nursery() as nursery:
-                    nursery.start_soon(self._publish_demand(), stream)
+                    nursery.start_soon(self._publish_demand, stream)
                     await self._receive_state(stream)
         except StreamExpired:
             self._closed.set()
