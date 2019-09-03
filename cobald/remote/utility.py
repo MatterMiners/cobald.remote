@@ -11,6 +11,7 @@ T = TypeVar('T')
 
 
 def acloseable(call: Callable[..., T]) -> Callable[..., AsyncContextManager[T]]:
+    """Decorate a function to wrap the result in a ``.aclose`` async context manager"""
     @functools.wraps(call)
     def inner(*args, **kwargs) -> AsyncContextManager[T]:
         return aclosing(call(*args, **kwargs))  # type: AsyncContextManager[T]
@@ -18,6 +19,14 @@ def acloseable(call: Callable[..., T]) -> Callable[..., AsyncContextManager[T]]:
 
 
 class AwaitableBool:
+    """
+    Wrapper around a :py:class:`trio.Event` providing an async boolean interface
+
+    This type can be synchronously evaluated in a boolean context,
+    such as ``bool(awaitable_bool)`` or ``if (awaitable_bool):``.
+    In addition, a ``trio`` coroutine can delay until the event is set,
+    such as ``await awaitable_bool``.
+    """
     def __init__(self, event: trio.Event):
         self._event = event
 
@@ -29,10 +38,12 @@ class AwaitableBool:
 
 
 def default(value: Optional[T], _or: T) -> T:
+    """Given an optional ``value``, return the value if set or a default"""
     return value if value is not None else _or
 
 
 class AsyncIterSentinel:
+    """Sentinel for async iteration"""
     def __repr__(self):
         return self.__class__.__name__
 
@@ -48,7 +59,7 @@ def async_iter(
     :param sentinel: optional indicator for end of iteration
     :return: AsyncIterator over all values produced by ``awaitable_calls``
 
-    In its simples form with just one ``awaitable_calls``, this is equivalent
+    In its simplest form with just one ``awaitable_calls``, this is equivalent
     to repeatedly calling, awaiting and yielding from its argument:
 
     .. code:: python3
