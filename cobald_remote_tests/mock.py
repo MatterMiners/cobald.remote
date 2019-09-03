@@ -6,8 +6,25 @@ from cobald.interfaces import Pool, Controller
 
 
 class MockController(Controller):
-    def set_demand(self, value: float):
+    @property
+    def demand(self):
+        return self.target.demand
+
+    @demand.setter
+    def demand(self, value: float):
         self.target.demand = value
+
+    @property
+    def supply(self):
+        return self.target.supply
+
+    @property
+    def utilisation(self):
+        return self.target.utilisation
+
+    @property
+    def allocation(self):
+        return self.target.allocation
 
 
 class MockPool(Pool):
