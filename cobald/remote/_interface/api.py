@@ -47,10 +47,9 @@ class Protocol(ABC):
         raise NotImplementedError
 
     def __rshift__(self, other: Pool) -> RemoteController:
-        return Partial(RemoteController, protocol=self) >> other
+        return Partial(RemoteController, protocol=self, __leaf__=False) >> other
 
     def __rrshift__(self, other: Partial[Controller]) -> Pool:
-        print(self, '<<', other)
         return other >> self.pool()
 
     @abstractmethod
