@@ -15,7 +15,7 @@ class TCPTransport(Transport):
         self.host = host
         self.port = port
 
-    def __connect__(self) -> 'AsyncContextManager[MessageStream]':
+    async def __connect__(self) -> 'AsyncContextManager[MessageStream]':
         stream = await trio.open_tcp_stream(host=self.host, port=self.port)
         return scope_stream(stream)
 
