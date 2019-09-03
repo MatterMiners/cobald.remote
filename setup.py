@@ -28,7 +28,7 @@ if __name__ == '__main__':
         packages=find_packages(),
         # dependencies
         install_requires=[
-            'cobald>=0.9.2',
+            'cobald>=0.10.0',
             'trio>=0.11.0',
             'async_generator',
         ],
