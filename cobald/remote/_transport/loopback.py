@@ -9,6 +9,11 @@ from .._interface.streams import MessageStream, StreamClosed, StreamBroken
 
 
 class MemoryTransport(Transport):
+    """
+    In-memory transport for communication inside a single process
+
+    :param identifier: a unique identifier for the connection
+    """
     _listener = {}  # type: Dict[Any, MemoryTransport]
     _peer = {}  # type: Dict[Any, Tuple[SendChannel, ReceiveChannel]]
 
