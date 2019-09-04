@@ -24,11 +24,14 @@ def protocol(request):
 
 
 def test_binding(protocol: Protocol):
+    """Connect via ``>>`` to get lazy sync proxy"""
     control_side = MockController.s() >> protocol.pool()  # type: MockController
     pool_side = protocol >> MockPool()
     assert isinstance(control_side, MockController)
     assert isinstance(pool_side, Controller)
     with accept_services(name='test_binding'):
+        assert control_side.target.peer is not None
+        assert pool_side.peer is not None
         control_side.demand = 2
         assert poll(lambda: pool_side.target.demand == 2, timeout=2),\
             "Remote pool demand must be set"
@@ -41,15 +44,19 @@ def test_binding(protocol: Protocol):
         assert poll(lambda: pool_side.target.demand == 0, timeout=2),\
             "Remote pool demand must be set"
         assert poll(lambda: control_side.demand == 0)
+        assert control_side.supply == pool_side.target.supply
         assert control_side.allocation == pool_side.target.allocation
         assert control_side.utilisation == pool_side.target.utilisation
 
 
 def test_pool_iter(protocol: Protocol):
+    """Connect directly to get bound async proxy"""
     pool_side = protocol >> MockPool()
     assert isinstance(pool_side, Controller)
     with accept_services(name='test_binding'):
         control_side = next(iter(protocol))
+        assert control_side.peer is not None
+        assert pool_side.peer is not None
         control_side.demand = 2
         assert poll(lambda: pool_side.target.demand == 2, timeout=2),\
             "Remote pool demand must be set"
@@ -62,5 +69,6 @@ def test_pool_iter(protocol: Protocol):
         assert poll(lambda: pool_side.target.demand == 0, timeout=2),\
             "Remote pool demand must be set"
         assert poll(lambda: control_side.demand == 0)
+        assert control_side.supply == pool_side.target.supply
         assert control_side.allocation == pool_side.target.allocation
         assert control_side.utilisation == pool_side.target.utilisation
